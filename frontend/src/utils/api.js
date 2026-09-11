@@ -1,12 +1,34 @@
-export const API_BASE = (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
-const API_ROOT = `${API_BASE}/api`;
+export function getApiBase() {
+  if (typeof window !== "undefined") {
+    const saved = localStorage.getItem("cerebro_api_url");
+    if (saved && saved.trim()) {
+      return saved.trim().replace(/\/$/, "");
+    }
+  }
+  return (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+}
+
+export function setCustomApiBase(url) {
+  if (typeof window !== "undefined") {
+    if (!url || !url.trim()) {
+      localStorage.removeItem("cerebro_api_url");
+    } else {
+      localStorage.setItem("cerebro_api_url", url.trim().replace(/\/$/, ""));
+    }
+    window.dispatchEvent(new CustomEvent("cerebro_api_url_changed"));
+  }
+}
+
+export const API_BASE = getApiBase();
 
 async function request(path, options = {}) {
+  const base = getApiBase();
+  const apiRoot = `${base}/api`;
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), 12000);
   let response;
   try {
-    response = await fetch(`${API_ROOT}${path}`, {
+    response = await fetch(`${apiRoot}${path}`, {
       headers: {
         "Content-Type": "application/json",
         ...(options.headers || {}),
@@ -17,9 +39,9 @@ async function request(path, options = {}) {
   } catch (error) {
     window.clearTimeout(timeoutId);
     if (error.name === "AbortError") {
-      throw new Error(`Request timed out. Confirm the Django server is running on ${API_BASE}.`);
+      throw new Error(`Request timed out. Confirm the Django server is running on ${base}.`);
     }
-    throw new Error(`Unable to reach backend. Confirm the Django server is running on ${API_BASE}.`);
+    throw new Error(`Unable to reach backend. Confirm the Django server is running on ${base}.`);
   }
   window.clearTimeout(timeoutId);
 
@@ -37,10 +59,15 @@ async function request(path, options = {}) {
 }
 
 export const api = {
-  baseUrl: API_BASE,
-  apiRoot: API_ROOT,
-  healthCheck() {
-    return fetch(`${API_BASE}/`, { method: "GET" }).then(async (response) => {
+  get baseUrl() {
+    return getApiBase();
+  },
+  get apiRoot() {
+    return `${getApiBase()}/api`;
+  },
+  healthCheck(customUrl = null) {
+    const base = customUrl ? customUrl.replace(/\/$/, "") : getApiBase();
+    return fetch(`${base}/`, { method: "GET" }).then(async (response) => {
       if (!response.ok) {
         throw new Error("Backend unavailable");
       }

@@ -183,8 +183,12 @@ else:
         "http://localhost:5175",
     ]
 CORS_ALLOW_ALL_ORIGINS = os.environ.get("CORS_ALLOW_ALL_ORIGINS", "0").lower() in ["1", "true"] or DEBUG
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https:\/\/.*\.vercel\.app$",
+]
 
 CSRF_TRUSTED_ORIGINS = [
+    "https://*.vercel.app",
     "https://cerebronodecast.vercel.app",
     "https://cerebro-code-red.vercel.app",
     "https://cerebro-api.onrender.com",

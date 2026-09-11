@@ -7,11 +7,13 @@ import { Input } from "../components/ui/Input";
 import TerminalConsole from "../components/ui/TerminalConsole";
 import useStore from "../store/useStore";
 import { api } from "../utils/api";
+import { BackendConfigModal } from "../components/BackendConfigModal";
 
 export default function CreateRoom() {
   const navigate = useNavigate();
   const setRoomCodeStore = useStore((state) => state.setRoomCode);
   const setIsBroadcaster = useStore((state) => state.setIsBroadcaster);
+  const [showConfig, setShowConfig] = useState(false);
   const [roomCode, setRoomCode] = useState("");
   const [broadcasterName, setBroadcasterName] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
@@ -110,8 +112,18 @@ export default function CreateRoom() {
         </div>
 
         {error ? (
-          <div className="rounded-md border border-[#ff0033]/30 bg-[#ff0033]/10 px-4 py-3 font-vt323 text-xl text-[#ff8a9d]">
-            {error}
+          <div className="space-y-3 rounded-md border border-[#ff0033]/30 bg-[#ff0033]/10 p-4 font-vt323 text-xl text-[#ff8a9d]">
+            <div>{error}</div>
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#ff0033]/20 pt-2 font-sans text-xs text-white/70">
+              <span>Running on Vercel? Configure your public backend URL:</span>
+              <button
+                type="button"
+                onClick={() => setShowConfig(true)}
+                className="rounded border border-[#00ff66]/50 bg-[#00ff66]/10 px-3 py-1 font-vt323 text-base uppercase text-[#00ff66] transition hover:bg-[#00ff66] hover:text-black"
+              >
+                ⚡ CONFIGURE BACKEND URL
+              </button>
+            </div>
           </div>
         ) : null}
 
@@ -124,6 +136,7 @@ export default function CreateRoom() {
           </Button>
         </div>
       </form>
+      <BackendConfigModal isOpen={showConfig} onClose={() => setShowConfig(false)} />
     </AccessPanel>
   );
 }

@@ -1,12 +1,20 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useSyncStore } from "../store/useSyncStore";
+import { getApiBase } from "../utils/api";
 
 function getWsUrl(roomCode) {
+  if (typeof window !== "undefined") {
+    const savedWs = localStorage.getItem("cerebro_ws_url");
+    if (savedWs && savedWs.trim()) {
+      const base = savedWs.trim().replace(/\/$/, "");
+      return `${base}/ws/sync/${roomCode}/`;
+    }
+  }
   if (import.meta.env.VITE_WS_BASE_URL) {
     const base = import.meta.env.VITE_WS_BASE_URL.replace(/\/$/, "");
     return `${base}/ws/sync/${roomCode}/`;
   }
-  const apiBase = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+  const apiBase = getApiBase();
   const wsProtocol = apiBase.startsWith("https") ? "wss:" : "ws:";
   const wsHost = apiBase.replace(/^https?:\/\//, "").replace(/\/$/, "");
   return `${wsProtocol}//${wsHost}/ws/sync/${roomCode}/`;
